@@ -41,8 +41,7 @@ const accountMock = {
     password: 'khf79NEBDX'
   },
   folderId: '4d1039c9a419779f70d1dee5f200992a',
-  name: '',
-  status: 'PENDING'
+  name: ''
 }
 
 const accountMock2 = {
@@ -55,8 +54,7 @@ const accountMock2 = {
     password: 'khf79dzeNEBDX'
   },
   folderId: '4d1039c9a419779f70d1dee5f2009b8f',
-  name: '',
-  status: 'PENDING'
+  name: ''
 }
 
 const indexMock = {
@@ -88,14 +86,13 @@ beforeEach(() => {
 
 describe('accounts library', () => {
   it('should handle account creation', () => {
-    return accounts.create(cozyMock, konnectorMock, accountMock.auth, folderMock, 'mock')
+    return accounts.create(cozyMock, konnectorMock, accountMock.auth, folderMock._id, 'mock')
       .then(account => {
         expect(cozyMock.data.create.mock.calls.length).toBe(1)
         expect(cozyMock.data.create.mock.calls[0][0]).toBe(accounts.ACCOUNTS_DOCTYPE)
         expect(cozyMock.data.create.mock.calls[0][1]).toEqual({
           name: 'mock',
           account_type: konnectorMock.slug,
-          status: 'PENDING',
           auth: accountMock.auth,
           folderId: folderMock._id
         })
@@ -103,14 +100,13 @@ describe('accounts library', () => {
   })
 
   it('should handle account creation without name', () => {
-    return accounts.create(cozyMock, konnectorMock, accountMock.auth, folderMock)
+    return accounts.create(cozyMock, konnectorMock, accountMock.auth, folderMock._id)
       .then(account => {
         expect(cozyMock.data.create.mock.calls.length).toBe(1)
         expect(cozyMock.data.create.mock.calls[0][0]).toBe(accounts.ACCOUNTS_DOCTYPE)
         expect(cozyMock.data.create.mock.calls[0][1]).toEqual({
           name: '',
           account_type: konnectorMock.slug,
-          status: 'PENDING',
           auth: accountMock.auth,
           folderId: folderMock._id
         })

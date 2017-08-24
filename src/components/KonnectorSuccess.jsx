@@ -6,7 +6,7 @@ import { translate } from 'cozy-ui/react/I18n'
 
 import DescriptionContent from './DescriptionContent'
 
-export const KonnectorSuccess = ({ t, success, connector, isTimeout, folderPath, onAccountConfig, onCancel }) => {
+export const KonnectorSuccess = ({ t, success, connector, isTimeout, folderPath, folderId, onAccountConfig, onCancel, driveUrl }) => {
   return (
     <div>
       <DescriptionContent
@@ -17,7 +17,14 @@ export const KonnectorSuccess = ({ t, success, connector, isTimeout, folderPath,
           <p>
             {t(`account.message.${isTimeout ? 'syncing' : 'synced'}.bill`, { name: connector.name })}
             <br />
-            <span className={styles['col-account-success-highlighted-data']}>{folderPath}</span>
+            {folderPath &&
+              <span className={styles['col-account-success-highlighted-data']}>
+                {folderPath}
+              </span>
+            }
+            {driveUrl && folderId &&
+              <a className={styles['col-account-folder-link']} href={`${driveUrl}${folderId}`}>{t('account.folder.link')}</a>
+            }
           </p>
         }
       </DescriptionContent>

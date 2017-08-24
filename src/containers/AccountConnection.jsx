@@ -22,19 +22,50 @@ class AccountConnection extends Component {
   constructor (props, context) {
     super(props, context)
     this.store = this.context.store
+    const konnector = props.connector
     this.state = {
       account: this.props.existingAccount,
       editing: !!this.props.existingAccount,
-      success: null
+      success: null,
+      submitting: this.store.isConnectionStatusRunning(konnector),
+      error: this.props.error || this.store.getConnectionError(konnector)
     }
 
     if (this.props.error) this.handleError({message: this.props.error})
+
+    this.connectionListener = status => {
+      this.setState({
+        submitting: this.store.isConnectionStatusRunning(this.props.connector),
+        error: this.store.getConnectionError(this.props.connector),
+        // dirty hack waiting for better account management in store
+        lastSync: Date.now()
+      })
+    }
+
+    this.store.addConnectionStatusListener(konnector, this.connectionListener)
+  }
+
+  getFolderPathIfNecessary (connector, account) {
+    const { t } = this.context
+    const folderField = connector && connector.fields && connector.fields.folderPath
+    if (!folderField) return null
+
+    const auth = account && account.auth
+    if (auth && auth.folderPath) {
+      return auth.folderPath
+    }
+
+    return folderField.default || t('account.config.default_folder', connector)
   }
 
   componentWillReceiveProps ({ existingAccount }) {
     this.setState({
       account: existingAccount
     })
+  }
+
+  componentWillUnmount () {
+    this.store.removeConnectionStatusListener(this.props.connector, this.connectionListener)
   }
 
   connectAccount (auth) {
@@ -59,7 +90,7 @@ class AccountConnection extends Component {
       .catch(error => this.handleError(error))
   }
 
-  connectAccountOAuth (accountType, values) {
+  connectAccountOAuth (accountType, values, scope) {
     this.setState({
       submitting: true,
       oAuthTerminated: false
@@ -67,18 +98,17 @@ class AccountConnection extends Component {
 
     const cozyUrl =
       `${window.location.protocol}//${document.querySelector('[role=application]').dataset.cozyDomain}`
-    const newTab = popupCenter(`${cozyUrl}/accounts/${accountType}/start?scope=openid+profile+offline_access&state=xxx&nonce=${Date.now()}`, `${accountType}_oauth`, 800, 800)
+    const newTab = popupCenter(`${cozyUrl}/accounts/${accountType}/start?scope=${scope}&state=xxx&nonce=${Date.now()}`, `${accountType}_oauth`, 800, 800)
     return waitForClosedPopup(newTab, `${accountType}_oauth`)
     .then(accountID => {
-      return this.terminateOAuth(accountID, values.folderPath)
+      return this.terminateOAuth(accountID, values)
     })
     .catch(error => {
       this.setState({submitting: false, error: error.message})
     })
   }
 
-  terminateOAuth (accountID, folderPath) {
-    const { t } = this.context
+  terminateOAuth (accountID, accountValues) {
     const { slug } = this.props.connector
 
     this.setState({
@@ -92,10 +122,11 @@ class AccountConnection extends Component {
           .then(accounts => {
             konnector.accounts = accounts
             const currentIdx = accounts.findIndex(a => a._id === accountID)
-            const account = accounts[currentIdx]
+            // get all properties except folderPath in newValues
+            const {folderPath, ...newValues} = accountValues
+            const account = Object.assign({}, accounts[currentIdx], {auth: newValues})
             this.setState({account: account})
-            account.folderPath = account.folderPath || t('account.config.default_folder', konnector)
-            return this.runConnection(accounts[currentIdx], folderPath)
+            return this.runConnection(account, folderPath)
               .then(connection => {
                 this.setState({
                   connector: konnector,
@@ -204,6 +235,8 @@ class AccountConnection extends Component {
   }
 
   handleError (error) {
+    console.error(error)
+
     // when service usage
     if (this.props.onError) return this.props.onError(error)
 
@@ -216,8 +249,12 @@ class AccountConnection extends Component {
   }
 
   submit (values) {
+    this.setState({
+      error: null
+    })
+
     return this.props.connector && this.props.connector.oauth
-         ? this.connectAccountOAuth(this.props.connector.slug, values)
+         ? this.connectAccountOAuth(this.props.connector.slug, values, this.props.connector.oauth_scope)
          : this.connectAccount(values)
   }
 
@@ -250,7 +287,8 @@ class AccountConnection extends Component {
     const { t, connector, fields, isUnloading } = this.props
     const { submitting, oAuthTerminated, deleting, error, success, account, editing } = this.state
     const hasGlobalError = error && error.message !== ACCOUNT_ERRORS.LOGIN_FAILED
-
+    const lastSync = this.state.lastSync || (account && account.lastSync)
+    const folderPath = this.getFolderPathIfNecessary(connector, account)
     return (
       <div className={styles['col-account-connection']}>
         <div className={styles['col-account-connection-header']}>
@@ -266,14 +304,14 @@ class AccountConnection extends Component {
               messages={[t('account.message.error.global.description', {name: connector.name})]}
             /> }
 
-            { editing && !success && !error && <KonnectorSync
+            { editing && !success && <KonnectorSync
               frequency={account && account.auth && account.auth.frequency}
-              date={account && account.lastSync}
+              date={lastSync}
               submitting={submitting}
               onForceConnection={() => this.forceConnection()}
             /> }
 
-            { editing && !success && <KonnectorFolder
+            { editing && !success && folderPath && <KonnectorFolder
               connector={connector}
               account={account}
               driveUrl={this.store.driveUrl}
@@ -291,15 +329,17 @@ class AccountConnection extends Component {
               deleting={deleting}
               error={error}
               onDelete={() => this.deleteAccount()}
-              onSubmit={(values) => this.submit(Object.assign(values, {folderPath: t('account.config.default_folder', connector)}))}
+              onSubmit={(values) => this.submit(Object.assign(values, {folderPath}))}
               onCancel={() => this.cancel()}
             /> }
 
             { success && <KonnectorSuccess
               success={success}
               connector={connector}
+              folderId={account.folderId}
+              driveUrl={this.store.driveUrl}
               isTimeout={success.type === SUCCESS_TYPES.TIMEOUT}
-              folderPath={this.state.account.auth.folderPath}
+              folderPath={folderPath}
               onAccountConfig={() => this.goToConfig()}
               onCancel={() => this.cancel()}
               isUnloading={isUnloading}
