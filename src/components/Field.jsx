@@ -60,9 +60,7 @@ export class FieldWrapper extends Component {
   render () {
     const { required, label, dirty, touched, invalid, errors, children } = this.props
     const classes = {
-      [styles['coz-field--required']]: required === true,
-      [styles['coz-field--error']]: (errors.length !== 0) || invalid,
-      [styles['coz-field--dirty']]: dirty === true || touched === true
+      [styles['coz-field--error']]: (errors.length !== 0) || invalid
     }
 
     return (
