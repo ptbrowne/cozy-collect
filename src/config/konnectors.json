@@ -520,33 +520,6 @@
   },
   {
     "oauth": true,
-    "slug": "orangevideos",
-    "name": "Orange Vidéos",
-    "vendorLink": "https://www.orange.fr/",
-    "category": "isp",
-    "dataType": [
-      "videostream"
-    ],
-    "fields": {
-      "access_token": {
-        "type": "hidden"
-      },
-      "folderPath": {
-        "type": "folder",
-        "advanced": true
-      }
-    },
-    "additionnalSuccessMessage": {
-      "message": "connector.orange.message.delay"
-    },
-    "hasDescriptions": {
-      "service": true
-    },
-    "source": "git://github.com/cozy/cozy-konnector-orangevod.git#build",
-    "oauth_scope": "I"
-  },
-  {
-    "oauth": true,
     "slug": "orangemobile",
     "name": "Orange Mobile – Appels & Géoloc",
     "vendorLink": "https://www.orange.fr/",
@@ -577,6 +550,33 @@
     },
     "source": "git://gitlab.cozycloud.cc/gjacquart/cozy-konnector-orangemobile.git#build",
     "oauth_scope": "M"
+  },
+  {
+    "oauth": true,
+    "slug": "orangevideos",
+    "name": "Orange Vidéos",
+    "vendorLink": "https://www.orange.fr/",
+    "category": "isp",
+    "dataType": [
+      "videostream"
+    ],
+    "fields": {
+      "access_token": {
+        "type": "hidden"
+      },
+      "folderPath": {
+        "type": "folder",
+        "advanced": true
+      }
+    },
+    "additionnalSuccessMessage": {
+      "message": "connector.orange.message.delay"
+    },
+    "hasDescriptions": {
+      "service": true
+    },
+    "source": "git://github.com/cozy/cozy-konnector-orangevod.git#build",
+    "oauth_scope": "I"
   },
   {
     "slug": "redmobile",

@@ -20,8 +20,7 @@ const AccountLoginForm = ({ t, isOAuth, oAuthTerminated, fields, error, dirty, s
       {error &&
         <p className='errors'>
           {t('account.message.error.bad_credentials')}
-        </p>
-      }
+        </p>}
       {!!editableFields && editableFields
         .map((field) => {
           const { name } = field
@@ -31,56 +30,48 @@ const AccountLoginForm = ({ t, isOAuth, oAuthTerminated, fields, error, dirty, s
           const inputName = `${name}_${connectorSlug}`
           const description = field.hasDescription
             ? <ReactMarkdownWrapper source={t(`connector.${connectorSlug}.description.field.${name}`)} />
-            : ''
+            : null
           const onEnterKey = () => {
             if (((!isUpdate || hasEditableFields) && !isSuccess) && !submitting && submitEnabled) submit()
           }
-          switch (field.type) {
-            case 'password':
-              return <div>
-                {description}
-                <PasswordField
-                  label={t(`account.form.label.${name}`)}
-                  name={inputName}
-                  placeholder={t('account.form.placeholder.password')}
-                  invalid={!!error}
-                  giveFocus={giveFocus}
-                  onEnterKey={onEnterKey}
-                  noAutoFill
-                  {...Object.assign({}, field, {
-                    value: isUnloading ? '' : field.value
-                  })}
-                />
-              </div>
-            case 'dropdown':
-              return <div>
-                {description}
-                <DropdownField label={t(`account.form.label.${name}`)} {...field} />
-              </div>
-            case 'checkbox':
-              // force boolean type here since it's just a checkbox
-              field.value = !!field.value
-              return <div>
-                {description}
-                <CheckboxField label={t(`account.form.label.${name}`)} {...field} />
-              </div>
-            default:
-              return <div>
-                {description}
-                <Field
-                  label={t(`account.form.label.${name}`)}
-                  name={inputName}
-                  readOnly={readOnly}
-                  invalid={!!error}
-                  giveFocus={giveFocus && !readOnly}
-                  onEnterKey={onEnterKey}
-                  noAutoFill
-                  {...Object.assign({}, field, {
-                    value: isUnloading ? '' : field.value
-                  })}
-                />
-              </div>
-          }
+          const label = t(`account.form.label.${name}`)
+          return <div>
+            {description}
+            { (() => {
+              switch (field.type) {
+                case 'password':
+                  return <PasswordField
+                      label={label}
+                      name={inputName}
+                      placeholder={t('account.form.placeholder.password')}
+                      invalid={!!error}
+                      giveFocus={giveFocus}
+                      onEnterKey={onEnterKey}
+                      noAutoFill
+                      {...field}
+                      value={isUnloading ? '' : field.value} />
+                case 'dropdown':
+                  return <DropdownField label={label} {...field} />
+                case 'checkbox':
+                  // force boolean type here since it's just a checkbox
+                  field.value = !!field.value
+                  return <CheckboxField label={label} {...field} />
+                default:
+                  return <Field
+                      label={label}
+                      name={inputName}
+                      readOnly={readOnly}
+                      invalid={!!error}
+                      giveFocus={giveFocus && !readOnly}
+                      onEnterKey={onEnterKey}
+                      noAutoFill
+                      {...Object.assign({}, field, {
+                        value: isUnloading ? '' : field.value
+                      })}
+                    />
+              }
+            })() }
+          </div>
         }
       )}
 
