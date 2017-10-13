@@ -1,6 +1,7 @@
 import styles from '../styles/field.styl'
 
 import React, { Component, cloneElement } from 'react'
+import ReactDOM from 'react-dom'
 import classNames from 'classnames'
 import { translate } from 'cozy-ui/react/I18n'
 import statefulComponent from '../lib/statefulComponent'
@@ -48,31 +49,24 @@ export default Field
 
 export class FieldWrapper extends Component {
   componentDidMount () {
-    if (this.props.giveFocus) this.wrapper.querySelector('input').focus()
-    if (typeof this.props.onEnterKey === 'function') {
-      this.wrapper.addEventListener('keyup', (e) => {
-        const key = e.which || e.keyCode
-        if (key === 13) this.props.onEnterKey()
-      })
-    }
+    if (this.props.giveFocus) ReactDOM.findDOMNode(this).querySelector('input').focus()
+  }
+
+  handleKeyUp (ev) {
+    const key = ev.which || ev.keyCode
+    if (key === 13) this.props.onEnterKey()
   }
 
   render () {
     const { required, label, dirty, touched, invalid, errors, children } = this.props
-    const conditionals = {
-      'coz-field--required': required === true,
-      'coz-field--error': (errors.length !== 0) || invalid,
-      'coz-field--dirty': dirty === true || touched === true
+    const classes = {
+      [styles['coz-field--required']]: required === true,
+      [styles['coz-field--error']]: (errors.length !== 0) || invalid,
+      [styles['coz-field--dirty']]: dirty === true || touched === true
     }
 
-    const classes = ['coz-field'].concat(Object.keys(conditionals).filter(key => {
-      return conditionals[key]
-    }))
-
-    const moduleClasses = classes.map(className => styles[className])
-
     return (
-      <div className={classNames.apply(this, moduleClasses)} ref={(el) => { this.wrapper = el }}>
+      <div className={classNames(styles['coz-field'], classes)} onKeyUp={this.props.onEnterKey && this.handleKeyUp}>
         {label && <label>{label}</label>}
         {children}
         {errors.length !== 0 && errors.map((err, i) => (
