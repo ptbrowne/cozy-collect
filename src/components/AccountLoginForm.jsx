@@ -52,6 +52,20 @@ const AccountLoginForm = ({ t, isOAuth, oAuthTerminated, fields, error, dirty, s
                       value={isUnloading ? '' : field.value} />
                 case 'dropdown':
                   return <DropdownField label={label} {...field} />
+                case 'date':
+                  return <Field
+                    type='date'
+                    label={label}
+                    name={inputName}
+                    readOnly={readOnly}
+                    invalid={!!error}
+                    giveFocus={giveFocus && !readOnly}
+                    onEnterKey={onEnterKey}
+                    noAutoFill
+                    {...Object.assign({}, field, {
+                      value: isUnloading ? '' : field.value
+                    })}
+                  />
                 case 'checkbox':
                   // force boolean type here since it's just a checkbox
                   field.value = !!field.value
